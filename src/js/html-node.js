@@ -39,6 +39,12 @@ class HTMLNode {
         if(this.htmlShown) {
             this.drawHTML();
         }
+
+        if(!this.isCollapsed) {
+            for(let child of this.children) {
+                child.draw(context);
+            }
+        }
     }
 
     drawControls(context) {

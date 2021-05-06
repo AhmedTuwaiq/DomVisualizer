@@ -49,13 +49,7 @@ class Dom {
     }
     
     draw() {
-        for(let level of this.levels) {
-            for(let node of level) {
-                if(node.isActive == true) {
-                    node.draw(this.context);
-                }
-            }
-        }
+        this.root.draw(this.context);
     }
 
     clear() {
