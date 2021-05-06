@@ -1,4 +1,4 @@
-<h2 style="text-align: center; font-size: 40px;">Dom Visualizer</h2>
+# Dom Visualizer
 <br>
 
 # Description
