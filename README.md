@@ -11,7 +11,7 @@ This app visualize all dom nodes located at [index.html](index.html)
 - Display node outer html
 - Export Visualization to png
 - Ability to add nodes
-- Ability to move nodes with children
+- Ability to move nodes with its children
 
 <br>
 <br>
