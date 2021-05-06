@@ -1,7 +1,4 @@
 # Dom Visualizer
-<br>
-
-# Description
 This app visualize all dom nodes located at [index.html](index.html)
 
 <br>
