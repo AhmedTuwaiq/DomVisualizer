@@ -45,6 +45,7 @@ class Dom {
     }
 
     reset() {
+        this.root.children = [];
         this.levels = [[this.root]];
     }
     
