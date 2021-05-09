@@ -7,10 +7,75 @@ class HTMLNode {
         this.tail = new Point(0, 0);
         this.size = size;
         this.element = element;
-        this.isActive = true;
         this.isCollapsed = false;
-        this.attrShown = false;
+        this.attributesVisible = false;
         this.htmlShown = false;
+        this.isActive = true;
+    }
+
+    buildButtons() {
+        // attribute button location
+        let attrX = this.point.x - (this.size.width + 5);
+        let attrY = this.point.y - (this.size.height / 4);
+        let attrPoint = new Point(attrX, attrY);
+
+        // attribute button size
+        let attrWidth = this.size.width / 2;
+        let attrHeight = this.size.height / 4;
+        let attrSize = new Size(attrWidth, attrHeight);
+
+        /**
+         * note:-
+         * this is the center point for the collapse button
+         * unlike the node and attribute button
+         * they require the top left corner point
+         */
+        
+        // collapse button location
+        let colX = this.point.x - (this.size.width / 2) - 10;
+        let colY = this.point.y + 20;
+        let colPoint = new Point(colX, colY);
+
+        // collapse button size
+        let colSize = new Size(18, 18);
+
+        // adding buttons
+        this.buttons = {
+            nodeButton: new Button("node button", new Point(this.point.x - (this.size.width / 2), this.point.y - (this.size.height / 2)), this.size, buttonShapes.hidden),
+            attributeButton: new Button("attribute button", attrPoint, attrSize, buttonShapes.attributeButton),
+            collapseButton: new Button("collapse button", colPoint, colSize, buttonShapes.collapseButton)
+        };
+
+        // lazy load this node into the buttons to avoid circular dependency
+        this.buttons.nodeButton.node = this;
+        this.buttons.attributeButton.node = this;
+        this.buttons.collapseButton.node = this;
+
+        // callbacks
+        this.buttons.attributeButton.onClick = () => { this.toggleAttributesView() };
+        this.buttons.collapseButton.onClick = () => { this.toggleIsCollapsed() };
+    }
+
+    toggleAttributesView() {
+        this.attributesVisible = !this.attributesVisible;
+    }
+
+    toggleIsCollapsed() {
+        this.isCollapsed = !this.isCollapsed;
+
+        for(let child of this.children) {
+            child.toggleActive();
+        }
+    }
+
+    toggleActive() {
+        this.isActive = !this.isActive;
+
+        if(!this.isCollapsed) {
+            for(let child of this.children) {
+                child.isActive = this.isActive;
+            }
+        }
     }
 
     draw(context) {
@@ -32,7 +97,7 @@ class HTMLNode {
 
         this.drawControls(context);
 
-        if(this.attrShown) {
+        if(this.attributesVisible) {
             this.drawAttr(context);
         }
 
@@ -48,8 +113,11 @@ class HTMLNode {
     }
 
     drawControls(context) {
-        this.drawAttrButton(context);
-        this.drawExColButton(context);
+        for (let key in this.buttons) {
+            if (this.buttons.hasOwnProperty(key)) {
+                this.buttons[key].draw(context);
+            }
+        }
     }
 
     drawHTML() {
@@ -71,54 +139,6 @@ class HTMLNode {
         }
 
         context.fillText(this.element.outerHTML ? this.element.outerHTML : value, this.point.x, this.point.y - this.size.height + 5);
-    }
-
-    drawExColButton(context) {
-        if(this.children.length > 0) {
-            context.beginPath();
-            context.font = '10px Arial';
-            context.textAlign = 'center';
-            context.fillText(this.isCollapsed ? "+" : "-", this.point.x - (this.size.width / 2) - 5, this.point.y + 20);
-        }
-    }
-
-    drawAttrButton(context) {
-        if(!this.element.attributes || this.element.attributes.length == 0) {
-            return;
-        }
-
-        context.beginPath();
-        context.rect(this.point.x - this.size.width + 10, this.point.y - (this.size.height / 4), this.size.width / 4, this.size.height / 4);
-        context.stroke();
-    }
-
-    attrContains(point) {
-        if(!this.element.attributes || this.element.attributes.length == 0) {
-            return false;
-        }
-
-        let minX = this.point.x - this.size.width + 10;
-        let minY = this.point.y - (this.size.height / 4);
-        let maxX = minX + this.size.width / 4;
-        let maxY = minY + this.size.height / 4;
-
-        return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
-    }
-
-    exColContains(point) {
-        if(this.children.length <= 0) {
-            return false;
-        }
-
-        let x = this.point.x - (this.size.width / 2) - 5;
-        let y = this.point.y + 20;
-        let size = 5;
-        let minX = x - size;
-        let minY = y - size;
-        let maxX = x + size;
-        let maxY = y + size;
-
-        return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
     }
 
     drawAttr(context) {
@@ -175,32 +195,6 @@ class HTMLNode {
     appendChild(child) {
         this.children.push(child);
     }
-
-    collapse() {
-        for(let child of this.children) {
-            child.isActive = false;
-            child.collapse();
-        }
-    }
-
-    expand() {
-        if(this.isCollapsed) {
-            return;
-        }
-
-        for(let child of this.children) {
-            child.isActive = true;
-            child.expand();
-        }
-    }
-
-    contains(point) {
-        let x = this.point.x - (this.size.width / 2);
-        let y = this.point.y - (this.size.height / 2);
-        let containsX = x <= point.x && point.x <= x + this.size.width;
-        let containsY = y <= point.y && point.y <= y + this.size.height;
-        return containsX && containsY;
-    }
     
     moveTo(point) {
         let dx = point.x - this.point.x;
@@ -214,5 +208,6 @@ class HTMLNode {
         this.point = point;
         this.head = new Point(point.x, point.y - (this.size.height / 2));
         this.tail = new Point(point.x, point.y + (this.size.height / 2));
+        this.buildButtons();
     }
 }

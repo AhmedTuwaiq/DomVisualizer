@@ -26,10 +26,15 @@ class Cursor {
         for(let level of this.dom.levels) {
             for(let node of level) {
                 if(node.isActive) {
-                    if(node.contains(mousePoint)) {
+                    if(node.buttons.nodeButton.contains(mousePoint)) {
                         this.selectedNode = node;
                         this.delta = new Point(mousePoint.x - node.point.x, mousePoint.y - node.point.y);
-                        break;
+
+                        if(this.hoveredOverNode) {
+                            this.hoveredOverNode.htmlShown = false;
+                            this.hoveredOverNode = null;
+                        }
+                        return;
                     }
                 }
             }
@@ -42,19 +47,12 @@ class Cursor {
         for(let level of this.dom.levels) {
             for(let node of level) {
                 if(node.isActive) {
-                    if(node.exColContains(mousePoint)) {
-                        if(!node.isCollapsed) {
-                            node.isCollapsed = true;
-                            node.collapse();
-                        } else {
-                            node.isCollapsed = false;
-                            node.expand();
-                        }
-
+                    if(node.buttons.collapseButton.contains(mousePoint) && node.children.length > 0) {
+                        node.buttons.collapseButton.click();
                         this.dom.redraw();
                         break;
-                    } else if(node.attrContains(mousePoint)) {
-                        node.attrShown = !node.attrShown;
+                    } else if(node.buttons.attributeButton.contains(mousePoint) && node.element.attributes && node.element.attributes.length > 0) {
+                        node.buttons.attributeButton.click();
                         this.dom.redraw();
                         return;
                     }
@@ -64,11 +62,12 @@ class Cursor {
     }
 
     onDoubleClick(event) {
+        let mousePoint = this.getXY(this.canvas, event);
+
         for(let level of this.dom.levels) {
             for(let node of level) {
                 if(node.isActive && node.element.nodeType !== Node.TEXT_NODE && node.element.tagName != "SCRIPT") {
-                    let mousePoint = this.getXY(this.canvas, event);
-                    if(node.contains(mousePoint)) {
+                    if(node.buttons.nodeButton.contains(mousePoint)) {
                         let tagName = prompt("Please enter tag name", "");
                         if(tagName.length != 0) {
                             let element = document.createElement(tagName);
@@ -79,8 +78,8 @@ class Cursor {
                             this.dom.redraw();
                         }
                         break;
-                    } else if(node.attrContains(mousePoint)) {
-                        node.attrShown = !node.attrShown;
+                    } else if(node.buttons.attributeButton.contains(mousePoint)) {
+                        node.buttons.attributeButton.click();
                         this.dom.redraw();
                         break;
                     }
@@ -103,7 +102,7 @@ class Cursor {
 
         for(let level of this.dom.levels) {
             for(let node of level) {
-                if(node.contains(mousePoint)) {
+                if(node.buttons.nodeButton.contains(mousePoint)) {
                     if(this.hoveredOverNode) {
                         this.hoveredOverNode.htmlShown = false;
                     }
